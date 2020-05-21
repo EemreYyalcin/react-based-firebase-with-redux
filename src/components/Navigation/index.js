@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 
 import * as ROUTES from '../../constants/routes';
 import {Menu} from "semantic-ui-react";
+import SignOutButton from "../SignOut";
 
 
 const Navigation = ({authUser}) => {
@@ -34,13 +35,7 @@ const NavigationAuth = () => (
         >
             <Link to={ROUTES.ACCOUNT}>Account</Link>
         </Menu.Item>
-        <Menu.Item
-            name='admin'
-            active='false'
-        >
-            <Link to={ROUTES.ADMIN}>Admin</Link>
-        </Menu.Item>
-        {/*<SignOutButton/>*/}
+        <SignOutButton/>
     </Menu>
 );
 

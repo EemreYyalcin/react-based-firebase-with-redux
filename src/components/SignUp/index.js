@@ -6,6 +6,7 @@ import * as ROUTES from '../../constants/routes';
 import {SignInLink} from "../SignIn";
 import {connect} from "react-redux";
 import {signState} from "../../actions";
+import {getFirebaseService} from "../Firebase";
 
 
 const INITIAL_STATE = {
@@ -32,12 +33,11 @@ class SignUpForm extends Component {
     onSubmit = event => {
         const {username, email, passwordOne, firstName, lastName} = this.state;
 
-        this.props.firebase
+        getFirebaseService()
             .doCreateUserWithEmailAndPassword(email, passwordOne)
             .then(authUser => {
                 // Create a user in your Firebase realtime database
-                this.props.signState(authUser.user);
-                return this.props.firebase
+                return getFirebaseService()
                     .user(authUser.user.uid)
                     .set({
                         username,
@@ -48,7 +48,6 @@ class SignUpForm extends Component {
             })
             .then(() => {
                 this.setState({...INITIAL_STATE});
-                this.props.signState(...INITIAL_STATE);
                 this.props.history.push(ROUTES.HOME);
             })
             .catch(error => {
@@ -169,7 +168,6 @@ export const SignUpLink = () => (
 
 const mapStateToProps = (state) => {
     return {
-        firebase: state.firebase,
         authUser: state.authUser
     }
 };

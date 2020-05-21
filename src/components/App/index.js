@@ -8,13 +8,12 @@ import {HomePage} from "../HomePage";
 import SignUpForm from "../SignUp";
 import SignInForm from "../SignIn";
 import {connect} from "react-redux";
-import {createFirebase} from "../../actions"
+import Session from "../Session";
 
 
 class App extends Component {
 
     componentDidMount() {
-        this.props.createFirebase();
     }
 
     render() {
@@ -22,6 +21,7 @@ class App extends Component {
             <BrowserRouter>
                 <div>
                     <Navigation authUser={this.props.authUser}/>
+                    <Session/>
 
                     <Route path={ROUTES.HOME} component={HomePage}/>
                     <Route path={ROUTES.SIGN_UP} component={SignUpForm}/>
@@ -38,12 +38,11 @@ class App extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        firebase: state.firebase,
         authUser: state.authUser
     }
 };
 
 export default connect(
     mapStateToProps,
-    {createFirebase}
+    null
 )(App);

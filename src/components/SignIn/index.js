@@ -7,6 +7,7 @@ import * as ROUTES from '../../constants/routes';
 import {Button, Form, Grid, Header, Message, Segment} from "semantic-ui-react";
 import {connect} from "react-redux";
 import {signState} from "../../actions";
+import {getFirebaseService} from "../Firebase";
 
 const INITIAL_STATE = {
     email: '',
@@ -21,13 +22,13 @@ class SignInForm extends Component {
     }
 
     onSubmit = event => {
+        const self = this;
         const {email, password} = this.state;
-        console.log("FIREBASE:", this.props.firebase);
         console.log("FIREBASE:", this.props.authUser);
-        this.props.firebase
+        getFirebaseService()
             .doSignInWithEmailAndPassword(email, password)
             .then((e) => {
-                this.props.signState(e.user);
+                console.log("CURRENTUSER:", e);
                 this.setState({...INITIAL_STATE});
                 this.props.history.push(ROUTES.HOME);
             })
@@ -105,7 +106,6 @@ export const SignInLink = () => (
 
 const mapStateToProps = (state) => {
     return {
-        firebase: state.firebase,
         authUser: state.authUser
     }
 };

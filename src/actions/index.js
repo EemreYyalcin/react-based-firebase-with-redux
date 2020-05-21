@@ -7,9 +7,3 @@ export const signState = (authUser) => {
     };
 };
 
-
-export const createFirebase = () => {
-    return {
-        type: 'FIREBASE_STATE'
-    };
-};
