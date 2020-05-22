@@ -18,8 +18,22 @@ class Firebase {
         this.db = app.database();
     }
 
-    doCreateUserWithEmailAndPassword = (email, password) =>
-        this.auth.createUserWithEmailAndPassword(email, password);
+    doCreateUserWithEmailAndPassword = (email, password, displayName) =>
+        this.auth.createUserWithEmailAndPassword(email, password)
+            .then((authUser) => {
+                console.log(this.auth);
+                this.auth.currentUser.updateProfile({
+                    displayName: displayName
+                }).then(function () {
+                    console.log("Update SuccessFully");
+                    return authUser;
+                }, function (error) {
+                    // An error happened.
+                    return authUser;
+                });
+                return authUser;
+            })
+
 
     doSignInWithEmailAndPassword = (email, password) =>
         this.auth.signInWithEmailAndPassword(email, password);
@@ -30,6 +44,10 @@ class Firebase {
 
     doPasswordUpdate = password =>
         this.auth.currentUser.updatePassword(password);
+
+    message = uid => this.db.ref(`messages/${uid}`);
+
+    messages = () => this.db.ref('messages').orderByChild('date').limitToLast(5);
 
     getAuth = () => {
         return this.auth;

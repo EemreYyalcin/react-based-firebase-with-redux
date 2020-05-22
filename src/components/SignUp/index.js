@@ -10,7 +10,7 @@ import {getFirebaseService} from "../Firebase";
 
 
 const INITIAL_STATE = {
-    username: '',
+    displayName: '',
     email: '',
     passwordOne: '',
     passwordTwo: '',
@@ -31,16 +31,16 @@ class SignUpForm extends Component {
     };
 
     onSubmit = event => {
-        const {username, email, passwordOne, firstName, lastName} = this.state;
+        const {displayName, email, passwordOne, firstName, lastName} = this.state;
 
         getFirebaseService()
-            .doCreateUserWithEmailAndPassword(email, passwordOne)
+            .doCreateUserWithEmailAndPassword(email, passwordOne, displayName)
             .then(authUser => {
                 // Create a user in your Firebase realtime database
                 return getFirebaseService()
                     .user(authUser.user.uid)
                     .set({
-                        username,
+                        displayName,
                         email,
                         firstName,
                         lastName
@@ -59,7 +59,7 @@ class SignUpForm extends Component {
 
     render() {
         const {
-            username,
+            displayName,
             email,
             passwordOne,
             passwordTwo,
@@ -73,7 +73,7 @@ class SignUpForm extends Component {
             passwordOne !== passwordTwo ||
             passwordOne === '' ||
             email === '' ||
-            username === '' ||
+            displayName === '' ||
             firstName === '' ||
             lastName === '';
         return (
@@ -86,11 +86,11 @@ class SignUpForm extends Component {
                         <Segment stacked>
                             <Form.Input
                                 fluid
-                                name="username"
-                                value={username}
+                                name="displayName"
+                                value={displayName}
                                 onChange={this.onChange}
                                 type="text"
-                                placeholder="Username"
+                                placeholder="DisplayName"
                             />
 
                             <Form.Input

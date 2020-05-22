@@ -1,0 +1,14 @@
+
+
+.comment-group-box {
+    margin-top: 5vh;
+}
+
+.ui.comments:first-child {
+    margin-top: 5vh;
+    margin-left: 4vh;
+}
+
+.ui.comments{
+    max-width: 20vw;
+}

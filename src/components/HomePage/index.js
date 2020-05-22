@@ -1,8 +1,8 @@
 import React from 'react'
+import Messages from "../Messages";
 
 export const HomePage = () => (
     <div>
-        <h1>Home Page</h1>
-        <p>The Home Page is accessible by every signed in user.</p>
+        <Messages/>
     </div>
 );
