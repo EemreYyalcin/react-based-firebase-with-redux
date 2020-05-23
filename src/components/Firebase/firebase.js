@@ -49,6 +49,15 @@ class Firebase {
 
     messages = () => this.db.ref('messages').orderByChild('date').limitToLast(5);
 
+    addMessageV2 = (baseMessageId,messageId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}`);
+
+    getMessageV2 = (baseMessageId) => this.db.ref(`messagesV2/${baseMessageId}`).orderByChild('date');
+
+    addLikesV2 = (baseMessageId, messageId, userId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}/likes/${userId}`);
+
+    removeLikesV2 = (baseMessageId, messageId, userId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}/likes/${userId}`).remove();
+
+
     getAuth = () => {
         return this.auth;
     }

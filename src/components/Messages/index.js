@@ -2,8 +2,9 @@ import React, {Component} from 'react';
 import {connect} from "react-redux";
 import {signState} from "../../actions";
 import {Button, Comment, Form, Grid, Header, Icon, Message} from 'semantic-ui-react'
-import {getFirebaseService, getRandomUid} from "../Firebase";
+import {getFirebaseService} from "../Firebase";
 import "./commentCss.css";
+import {addMessageToDb, getMessagesFromDb, likeMessage} from "../Firebase/firebaseOptions";
 
 const INITIAL_MESSAGE = {
     date: null,
@@ -33,19 +34,12 @@ class Messages extends Component {
             invalidButton: true
         }
 
+        this.onSetState = this.onSetState.bind(this);
+
     }
 
     componentDidMount() {
-        this.setState({loading: true});
-
-        getFirebaseService().messages().on('value', snapshot => {
-            const messages = [];
-            snapshot.forEach(child => {
-                messages.push({key: child.key, value: child.val()})
-            });
-            this.setState({messages})
-            this.setState({loading: false});
-        });
+        getMessagesFromDb(this.onSetState, '0');
     }
 
     componentWillUnmount() {
@@ -75,27 +69,7 @@ class Messages extends Component {
             this.setState({error: "Invalid Input"});
             return;
         }
-
-        let date = Date().toString();
-        let userUid = this.props.authUser.uid;
-        let parentMessageId = '0'; // TODO: Change Child Messages
-        let deleted = false;
-        let displayName = this.props.authUser.displayName;
-
-        getFirebaseService()
-            .message(getRandomUid())
-            .set({
-                message,
-                date,
-                userUid,
-                parentMessageId,
-                deleted,
-                displayName
-            })
-            .then(() => this.setState({message: '', error: null, invalidButton: true}))
-            .catch(error => {
-                this.setState({error});
-            });
+        addMessageToDb(this.onSetState, message, this.props.authUser.uid, this.props.authUser.displayName);
 
         event.preventDefault();
     };
@@ -119,6 +93,31 @@ class Messages extends Component {
         });
     };
 
+    onSetState = events => {
+        this.setState(events)
+    };
+
+
+    checkLikes = likes => {
+        if (likes === undefined) {
+            return false;
+        }
+        for (let [key, value] of Object.entries(likes)) {
+            if (this.props.authUser.uid === key) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getLikeCount = likes => {
+        if (likes === undefined) {
+            return "0 like";
+        }
+        let count = Object.entries(likes).length;
+        return count + " likes";
+    }
+
     getComments = () => {
         return this.state.messages
             .filter(e => e.key !== '0' && e.value.displayName !== undefined)
@@ -130,10 +129,15 @@ class Messages extends Component {
                             <Comment.Author as='a'>{e.value.displayName}</Comment.Author>
                             <Comment.Metadata>
                                 <div>{new Date(e.value.date).toLocaleString()}</div>
+                                <div>
+                                    <Icon name='star'/>{this.getLikeCount(e.value.likes)}
+                                </div>
                             </Comment.Metadata>
                             <Comment.Text>{e.value.message}</Comment.Text>
                             <Comment.Actions>
-                                <Comment.Action>Reply</Comment.Action>
+                                <Comment.Action onClick={() => likeMessage('0', e.key, this.props.authUser.uid, this.checkLikes(e.value.likes))}>
+                                    {this.checkLikes(e.value.likes) ? <div>liked</div> :  <div>like</div>}
+                                </Comment.Action>
                             </Comment.Actions>
                         </Comment.Content>
                     </Comment>
@@ -147,7 +151,7 @@ class Messages extends Component {
         const {message} = this.state;
 
         return (
-            <Comment.Group size='large' textAlign='left' >
+            <Comment.Group size='large' textAlign='left'>
                 <Header as='h3' dividing>
                     The Most Popular
                 </Header>
