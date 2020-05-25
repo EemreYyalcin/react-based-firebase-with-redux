@@ -4,22 +4,7 @@ import {signState} from "../../actions";
 import {Button, Comment, Form, Grid, Header, Icon, Message} from 'semantic-ui-react'
 import {getFirebaseService} from "../Firebase";
 import "./commentCss.css";
-import {addMessageToDb, getMessagesFromDb, likeMessage} from "../Firebase/firebaseOptions";
-
-const INITIAL_MESSAGE = {
-    date: null,
-    userUid: null,
-    message: null,
-    parentMessageId: null,
-    deleted: false,
-    displayName: null
-};
-
-const INITIAL_MESSAGES = {
-    key: null,
-    message: null
-}
-
+import {addMessageToDb, getLikesMessage, getPopularMessagesFromDb, likeMessage} from "../Firebase/firebaseOptions";
 
 class Messages extends Component {
 
@@ -27,7 +12,8 @@ class Messages extends Component {
         super(props);
 
         this.state = {
-            messages: [],
+            popularMessages: [],
+            flowMessages:[],
             loading: false,
             message: '',
             error: null,
@@ -35,11 +21,10 @@ class Messages extends Component {
         }
 
         this.onSetState = this.onSetState.bind(this);
-
     }
 
     componentDidMount() {
-        getMessagesFromDb(this.onSetState, '0');
+        getPopularMessagesFromDb(this.onSetState);
     }
 
     componentWillUnmount() {
@@ -94,12 +79,13 @@ class Messages extends Component {
     };
 
     onSetState = events => {
+        console.log("1",this);
         this.setState(events)
     };
 
 
     checkLikes = likes => {
-        if (likes === undefined) {
+        if (likes === undefined || likes === null) {
             return false;
         }
         for (let [key, value] of Object.entries(likes)) {
@@ -111,15 +97,15 @@ class Messages extends Component {
     }
 
     getLikeCount = likes => {
-        if (likes === undefined) {
+        if (likes === undefined || likes === null) {
             return "0 like";
         }
         let count = Object.entries(likes).length;
         return count + " likes";
     }
 
-    getComments = () => {
-        return this.state.messages
+    getComments = (messages) => {
+        return messages
             .filter(e => e.key !== '0' && e.value.displayName !== undefined)
             .map(e => {
                 return (
@@ -130,13 +116,14 @@ class Messages extends Component {
                             <Comment.Metadata>
                                 <div>{new Date(e.value.date).toLocaleString()}</div>
                                 <div>
-                                    <Icon name='star'/>{this.getLikeCount(e.value.likes)}
+                                    <Icon name='star'/>{this.getLikeCount(e.likes)}
                                 </div>
                             </Comment.Metadata>
                             <Comment.Text>{e.value.message}</Comment.Text>
                             <Comment.Actions>
-                                <Comment.Action onClick={() => likeMessage('0', e.key, this.props.authUser.uid, this.checkLikes(e.value.likes))}>
-                                    {this.checkLikes(e.value.likes) ? <div>liked</div> :  <div>like</div>}
+                                <Comment.Action onClick={() => likeMessage(e.key, this.props.authUser.uid, false)}>
+                                    {this.checkLikes(e.likes) ? <div>liked</div> :  <div>like</div>}
+                                    {/*{getLikesMessage(this.likeCallBack, e.key)}*/}
                                 </Comment.Action>
                             </Comment.Actions>
                         </Comment.Content>
@@ -155,7 +142,7 @@ class Messages extends Component {
                 <Header as='h3' dividing>
                     The Most Popular
                 </Header>
-                {this.getComments()}
+                {this.getComments(this.state.popularMessages)}
 
                 <Form reply onSubmit={this.onSubmit}>
                     <Form.TextArea name='message' rows={2} placeholder='Comment this topic' value={message}

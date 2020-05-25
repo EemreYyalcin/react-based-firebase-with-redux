@@ -23,28 +23,34 @@ export const addMessageToDb = (callBack, message, userUid, displayName) => {
         });
 }
 
-export const getMessagesFromDb = (callback, baseMessageId) => {
-    getFirebaseService().getMessageV2(baseMessageId).on('value', snapshot => {
-        const messages = [];
+export const getPopularMessagesFromDb = (callback) => {
+    getFirebaseService().getMessageV2('0').on('value', snapshot => {
+        const popularMessages = [];
         snapshot.forEach(child => {
             console.log("GGEEEETTTT:", child.key, child.val());
-            messages.push({key: child.key, value: child.val()})
+            getFirebaseService()
+                .getLikesV2(child.key)
+                .on('value', snapshot => {
+                    console.log("LIKESSSS", snapshot.val());
+                    popularMessages.push({key: child.key, value: child.val(), likes: snapshot.val()})
+                });
         });
-        callback({messages});
+        //TODO: Without Timeout Action
+        setTimeout(() => callback({popularMessages}), 1000);
     });
 }
 
 
-export const likeMessage = (baseMessageId, messageId, userUid, isLiked) => {
+export const likeMessage = (messageId, userUid, isLiked) => {
 
     if (isLiked === true){
-        unLikeMessage(baseMessageId, messageId, userUid);
+        unLikeMessage(messageId, userUid);
         return;
     }
 
     let date = Date().toString();
     getFirebaseService()
-        .addLikesV2(baseMessageId, messageId, userUid)
+        .addLikesV2(messageId, userUid)
         .set({
             date
         })
@@ -65,6 +71,17 @@ export const unLikeMessage = (baseMessageId, messageId, userUid) => {
         })
 }
 
+
+export const getLikesMessage = (likeCallBack, messageId) => {
+
+    getFirebaseService()
+        .getLikesV2(messageId)
+        .on('value', snapshot => {
+            console.log("LIKESSSS", snapshot.val());
+            likeCallBack(messageId, snapshot.val());
+        });
+
+}
 
 
 
