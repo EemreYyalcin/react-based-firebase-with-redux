@@ -23,35 +23,36 @@ export const addMessageToDb = (callBack, message, userUid, displayName) => {
         });
 }
 
-export const getPopularMessagesFromDb = (callback) => {
+export const getPopularMessagesFromDb = (callback, likeCallBack, userId) => {
     getFirebaseService().getMessageV2('0').on('value', snapshot => {
         const popularMessages = [];
         snapshot.forEach(child => {
-            console.log("GGEEEETTTT:", child.key, child.val());
+            popularMessages.push({key: child.key, value: child.val()})
             getFirebaseService()
-                .getLikesV2(child.key)
+                .getLikesV2(child.key, userId)
                 .on('value', snapshot => {
-                    console.log("LIKESSSS", snapshot.val());
-                    popularMessages.push({key: child.key, value: child.val(), likes: snapshot.val()})
+                    console.log("ID:", child.key, "VALUE:", snapshot.val());
+                    likeCallBack(child.key, snapshot.val());
                 });
         });
-        //TODO: Without Timeout Action
-        setTimeout(() => callback({popularMessages}), 1000);
+        callback({popularMessages});
     });
 }
 
 
-export const likeMessage = (messageId, userUid, isLiked) => {
+export const likeMessage = (message, user, likes) => {
 
-    if (isLiked === true){
-        unLikeMessage(messageId, userUid);
+    getFirebaseService().addLikeCountV2(message, !!likes).then(() => console.log("sas"));
+    if (!!likes) {
+        unLikeMessage(likes);
         return;
     }
-
     let date = Date().toString();
     getFirebaseService()
-        .addLikesV2(messageId, userUid)
+        .addLikesV2(getRandomUid())
         .set({
+            message,
+            user,
             date
         })
         .then(() => console.log("SUCCESSFULL LIKED"))
@@ -61,26 +62,14 @@ export const likeMessage = (messageId, userUid, isLiked) => {
 }
 
 
-export const unLikeMessage = (baseMessageId, messageId, userUid) => {
-
+export const unLikeMessage = (likes) => {
+    console.log("UNLIKE:", likes);
     getFirebaseService()
-        .removeLikesV2(baseMessageId, messageId, userUid)
+        .removeLikesV2(likes)
         .then(() => console.log("SUCCESSFULL UNLIKED"))
         .catch(error => {
             console.log("ERROR CREATED", error)
         })
-}
-
-
-export const getLikesMessage = (likeCallBack, messageId) => {
-
-    getFirebaseService()
-        .getLikesV2(messageId)
-        .on('value', snapshot => {
-            console.log("LIKESSSS", snapshot.val());
-            likeCallBack(messageId, snapshot.val());
-        });
-
 }
 
 

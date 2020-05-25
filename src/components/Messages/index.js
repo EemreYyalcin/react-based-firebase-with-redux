@@ -4,7 +4,7 @@ import {signState} from "../../actions";
 import {Button, Comment, Form, Grid, Header, Icon, Message} from 'semantic-ui-react'
 import {getFirebaseService} from "../Firebase";
 import "./commentCss.css";
-import {addMessageToDb, getLikesMessage, getPopularMessagesFromDb, likeMessage} from "../Firebase/firebaseOptions";
+import {addMessageToDb, getPopularMessagesFromDb, likeMessage} from "../Firebase/firebaseOptions";
 
 class Messages extends Component {
 
@@ -24,7 +24,7 @@ class Messages extends Component {
     }
 
     componentDidMount() {
-        getPopularMessagesFromDb(this.onSetState);
+        getPopularMessagesFromDb(this.onSetState, this.likeCallBack);
     }
 
     componentWillUnmount() {
@@ -83,17 +83,28 @@ class Messages extends Component {
         this.setState(events)
     };
 
+    likeCallBack = (key, likes) => {
+        // this.setState(prevState => ({
+        //     popularLikes: {                   // object that we want to update
+        //         ...prevState.popularLikes,    // keep all other key-value pairs
+        //         key: key,
+        //         likes: likes// update the value of specific key
+        //     }
+        // }));
+        this.setState({[key]: likes});
+    };
+
 
     checkLikes = likes => {
         if (likes === undefined || likes === null) {
             return false;
         }
-        for (let [key, value] of Object.entries(likes)) {
-            if (this.props.authUser.uid === key) {
-                return true;
+        for (let [key, {user}] of Object.entries(likes)) {
+            if (this.props.authUser.uid === user) {
+                return key;
             }
         }
-        return false;
+        return null;
     }
 
     getLikeCount = likes => {
@@ -116,13 +127,13 @@ class Messages extends Component {
                             <Comment.Metadata>
                                 <div>{new Date(e.value.date).toLocaleString()}</div>
                                 <div>
-                                    <Icon name='star'/>{this.getLikeCount(e.likes)}
+                                    <Icon name='star'/>{this.getLikeCount(this.state[e.key])}
                                 </div>
                             </Comment.Metadata>
                             <Comment.Text>{e.value.message}</Comment.Text>
                             <Comment.Actions>
-                                <Comment.Action onClick={() => likeMessage(e.key, this.props.authUser.uid, false)}>
-                                    {this.checkLikes(e.likes) ? <div>liked</div> :  <div>like</div>}
+                                <Comment.Action onClick={() => likeMessage(e.key, this.props.authUser.uid, this.checkLikes(this.state[e.key]))}>
+                                    {this.checkLikes(this.state[e.key]) ? <div>liked</div> :  <div>like</div>}
                                     {/*{getLikesMessage(this.likeCallBack, e.key)}*/}
                                 </Comment.Action>
                             </Comment.Actions>

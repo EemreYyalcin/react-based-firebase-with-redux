@@ -49,19 +49,33 @@ class Firebase {
 
     messages = () => this.db.ref('messages').orderByChild('date').limitToLast(5);
 
-    addMessageV2 = (baseMessageId,messageId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}`);
+    addMessageV2 = (baseMessageId, messageId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}`);
 
     getMessageV2 = (baseMessageId) => this.db.ref(`messagesV2/${baseMessageId}`).orderByChild('likes');
 
-    // addLikesV2 = (baseMessageId, messageId, userId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}/likes/${userId}`);
 
-    addLikesV2 = (messageId, userId) => this.db.ref(`likesV2/${messageId}_${userId}`);
+    addLikesV2 = (key) => this.db.ref(`likesV2/${key}`);
 
-    removeLikesV2 = (messageId, userId) => this.db.ref(`likesV2/${messageId}_${userId}`).remove();
+    removeLikesV2 = (likeKey) => this.db.ref(`likesV2/${likeKey}`).remove();
 
-    getLikesV2 = (messageId) => this.db.ref('likesV2').orderByKey().startAt(messageId);
+    getLikesV2 = (messageId, userId) => this.db.ref('likesV2').orderByChild('message').equalTo(messageId);
 
-    // removeLikesV2 = (baseMessageId, messageId, userId) => this.db.ref(`messagesV2/${baseMessageId}/${messageId}/likes/${userId}`).remove();
+    addLikeCountV2 = (messageId, isLiked) => this.db.ref(`likesCountV2/${messageId}`).transaction(function (value) {
+        if (value === null) {
+            // the counter doesn't exist yet, start at one
+            return 1;
+        } else if (typeof value === 'number') {
+            // increment - the normal case
+            if (isLiked) {
+                return value - 1;
+            }
+            return value + 1;
+        } else {
+            // we can't increment non-numeric values
+            console.log('The counter has a non-numeric value: ' + value)
+            // letting the callback return undefined cancels the transaction
+        }
+    });
 
 
     getAuth = () => {
