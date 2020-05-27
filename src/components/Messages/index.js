@@ -4,13 +4,7 @@ import {signState} from "../../actions";
 import {Button, Comment, Form, Grid, Header, Icon, Message} from 'semantic-ui-react'
 import {getFirebaseService} from "../Firebase";
 import "./commentCss.css";
-import {
-    addMessageToDb,
-    addMessageToDbV3,
-    getPopularMessagesFromDb,
-    getPopularMessagesFromDbV3,
-    likeMessage, likeMessageV3
-} from "../Firebase/firebaseOptions";
+import {addMessageToDbV3, getPopularMessagesFromDbV3, likeMessageV3} from "../Firebase/firebaseOptions";
 
 class Messages extends Component {
 
@@ -19,7 +13,7 @@ class Messages extends Component {
 
         this.state = {
             popularMessages: [],
-            flowMessages:[],
+            flowMessages: [],
             loading: false,
             message: '',
             error: null,
@@ -31,7 +25,7 @@ class Messages extends Component {
     }
 
     componentDidMount() {
-        console.log("MOUNT",this.props.authUser);
+        console.log("MOUNT", this.props.authUser);
         // getPopularMessagesFromDbV3(this.onSetState, this.likeCallBack);
     }
 
@@ -95,19 +89,25 @@ class Messages extends Component {
         this.setState({[key]: likes});
     };
 
+    likeCountCallBack = (key, count) => {
+        this.setState({[key + 'count']: count});
+    }
 
     checkLikes = messageId => {
-        if (!!this.state[messageId]){
+        console.log("CHECKLINES:", messageId,this.state[messageId]);
+        if (!!this.state[messageId]) {
             return true;
         }
         return false;
     }
 
-    getLikeCount = likeCount => {
-        if (likeCount === undefined || likeCount === null) {
+    getLikeCount = messageId => {
+        let count = this.state[messageId + 'count'];
+        if (count === undefined || count === null) {
             return "0 like";
         }
-        return likeCount + " likes";
+        console.log("COUNT:", count);
+        return count + " likes";
     }
 
     getComments = (messages) => {
@@ -122,14 +122,14 @@ class Messages extends Component {
                             <Comment.Metadata>
                                 <div>{new Date(e.value.date).toLocaleString()}</div>
                                 <div>
-                                    <Icon name='star'/>{this.getLikeCount(e.value.likeCount)}
+                                    <Icon name='star'/>{this.getLikeCount(e.key)}
                                 </div>
                             </Comment.Metadata>
                             <Comment.Text>{e.value.message}</Comment.Text>
                             <Comment.Actions>
-                                <Comment.Action onClick={() => likeMessageV3(e.key, this.props.authUser.uid, this.checkLikes(e.key))}>
-                                    {this.checkLikes(e.key) ? <div>liked</div> :  <div>like</div>}
-                                    {/*{getLikesMessage(this.likeCallBack, e.key)}*/}
+                                <Comment.Action
+                                    onClick={() => likeMessageV3(e.key, this.props.authUser.uid, this.checkLikes(e.key), this.likeCallBack)}>
+                                    {this.checkLikes(e.key) ? <div>liked</div> : <div>like</div>}
                                 </Comment.Action>
                             </Comment.Actions>
                         </Comment.Content>
@@ -143,12 +143,12 @@ class Messages extends Component {
 
         const {message, load} = this.state;
 
-        if (!load){
-            if (this.props.authUser === null){
+        if (!load) {
+            if (this.props.authUser === null) {
                 return <div>LOADING</div>
             }
             this.setState({load: true});
-            getPopularMessagesFromDbV3(this.onSetState, this.likeCallBack, this.props.authUser.uid);
+            getPopularMessagesFromDbV3(this.onSetState, this.likeCallBack, this.likeCountCallBack, this.props.authUser.uid);
             return <div>LOADING</div>
         }
 

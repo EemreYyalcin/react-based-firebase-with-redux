@@ -96,7 +96,7 @@ export const addMessageToDbV3 = (callBack, message, userUid, displayName) => {
         });
 }
 
-export const getPopularMessagesFromDbV3 = (callback, likeCallBack, userId) => {
+export const getPopularMessagesFromDbV3 = (callback, likeCallBack, likeCountCallBack, userId) => {
     getFirebaseService().getMessageV3('0').onSnapshot(
         snapshot => {
             const popularMessages = [];
@@ -109,19 +109,29 @@ export const getPopularMessagesFromDbV3 = (callback, likeCallBack, userId) => {
                     })
                     // likeCallBack(child.id, snapshot1.);
                 });
+                getFirebaseService().getLikesCountV3(child.id).onSnapshot(snapshot1 => {
+                    if (snapshot1 === null) {
+                        likeCountCallBack(child.id, 0);
+                        return;
+                    }
+                    likeCountCallBack(child.id, snapshot1.size);
+                })
                 popularMessages.push({key: child.id, value: child.data()})
             });
             callback({popularMessages});
         });
 }
 
-export const likeMessageV3 = (message, user, liked) => {
+export const likeMessageV3 = (message, user, liked, likeCallBack) => {
 
     if (liked) {
         return;
     }
-
+    console.log("ADDLIKE:");
     getFirebaseService()
-        .addLikesV3(message, user);
+        .addLikesV3(message, user)
+        .then(() => {
+        likeCallBack(message, {date: Date(), user: user});
+    });
 }
 

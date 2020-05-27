@@ -94,27 +94,22 @@ class Firebase {
     getMessageV3 = (baseMessageId) => this.firestore.collection('messages').where('parentMessageId', '==', baseMessageId);
 
 
-    addLikesV3 = (messageId, userId) => {
+    addLikesV3 = (messageId, user) => {
         let date = Date().toString();
-        this.firestore.collection('message').doc(messageId).collection('likes').add({
-            userId,
+        return this.firestore.collection('messages').doc(messageId).collection('likes').add({
+            user,
             date
-        }).then(() => {
-            this.firestore.collection('messages').doc(messageId).collection('likes').get().then(snapshot => {
-                let likeCount = 0;
-                if (snapshot !== null) {
-                    likeCount = Object.keys(snapshot).length
-                }
-                this.firestore.collection('message').doc(messageId).update('likeCount', likeCount).then(() => console.log('SUCCESSFULLY LIKED'));
-            });
         });
+    }
+
+    getLikesCountV3 = (messageId) => {
+        return this.firestore.collection('messages').doc(messageId).collection('likes');
     }
 
     getUserLikesV3 = (messageId, userId) => {
         let messageRef = this.firestore.collection('messages').doc(messageId);
         return messageRef.collection('likes').where('user', '==', userId);
     }
-
 
 }
 
