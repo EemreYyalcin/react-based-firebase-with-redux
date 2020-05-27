@@ -73,6 +73,55 @@ export const unLikeMessage = (likes) => {
 }
 
 
+export const addMessageToDbV3 = (callBack, message, userUid, displayName) => {
+    let date = Date().toString();
+    let parentMessageId = '0'; // TODO: Change Child Messages
+    let deleted = false;
+    getFirebaseService()
+        .addMessageV3(parentMessageId)
+        .add({
+            message,
+            date,
+            userUid,
+            parentMessageId,
+            deleted,
+            displayName
+        })
+        .then((e) => {
+            callBack({message: '', error: null, invalidButton: true});
+        })
+        .catch(error => {
+            console.log(error)
+            callBack(error)
+        });
+}
 
+export const getPopularMessagesFromDbV3 = (callback, likeCallBack, userId) => {
+    getFirebaseService().getMessageV3('0').onSnapshot(
+        snapshot => {
+            const popularMessages = [];
+            snapshot.forEach(child => {
+                getFirebaseService().getUserLikesV3(child.id, userId).onSnapshot(snapshot1 => {
+                    console.log("SNAPSHOT1:", child.id, userId, snapshot1);
+                    snapshot1.forEach(child1 => {
+                        likeCallBack(child.id, child1.data());
+                        console.log("CHILD:", child1.data());
+                    })
+                    // likeCallBack(child.id, snapshot1.);
+                });
+                popularMessages.push({key: child.id, value: child.data()})
+            });
+            callback({popularMessages});
+        });
+}
 
+export const likeMessageV3 = (message, user, liked) => {
+
+    if (liked) {
+        return;
+    }
+
+    getFirebaseService()
+        .addLikesV3(message, user);
+}
 

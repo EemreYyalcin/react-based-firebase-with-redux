@@ -1,6 +1,7 @@
 import app from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/database';
+import 'firebase/firestore';
 
 const config = {
     apiKey: process.env.REACT_APP_API_KEY,
@@ -16,6 +17,7 @@ class Firebase {
         app.initializeApp(config);
         this.auth = app.auth();
         this.db = app.database();
+        this.firestore = app.firestore();
     }
 
     doCreateUserWithEmailAndPassword = (email, password, displayName) =>
@@ -85,6 +87,34 @@ class Firebase {
     user = uid => this.db.ref(`users/${uid}`);
 
     users = () => this.db.ref('users');
+
+
+    addMessageV3 = () => this.firestore.collection(`messages`);
+
+    getMessageV3 = (baseMessageId) => this.firestore.collection('messages').where('parentMessageId', '==', baseMessageId);
+
+
+    addLikesV3 = (messageId, userId) => {
+        let date = Date().toString();
+        this.firestore.collection('message').doc(messageId).collection('likes').add({
+            userId,
+            date
+        }).then(() => {
+            this.firestore.collection('messages').doc(messageId).collection('likes').get().then(snapshot => {
+                let likeCount = 0;
+                if (snapshot !== null) {
+                    likeCount = Object.keys(snapshot).length
+                }
+                this.firestore.collection('message').doc(messageId).update('likeCount', likeCount).then(() => console.log('SUCCESSFULLY LIKED'));
+            });
+        });
+    }
+
+    getUserLikesV3 = (messageId, userId) => {
+        let messageRef = this.firestore.collection('messages').doc(messageId);
+        return messageRef.collection('likes').where('user', '==', userId);
+    }
+
 
 }
 
